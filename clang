@@ -15,4 +15,4 @@ COSMOCC_DIR=$(dirname "$COSMOCC_REAL")
 LIBEXEC_DIR=$(dirname "$COSMOCC_DIR")/libexec
 CLANG_ORIG="$LIBEXEC_DIR/clang.orig"
 # Execute ccache with clang.orig and all arguments properly quoted
-exec ccache sh "$CLANG_ORIG" "$@"
+exec ccache "$CLANG_ORIG" "$@"
