@@ -116,7 +116,7 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           tar -czf cute-shaderc.tar.gz \
-              -C .build cute-shaderc \
+              -C build cute-shaderc \
               --transform 's/cute-shaderc/cute-shaderc.exe/'
 
       - name: Release
