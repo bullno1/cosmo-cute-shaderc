@@ -101,9 +101,10 @@ jobs:
 
       - name: Build
         env:
-          CCACHE_DIR: ~/.cache/ccache
           CCACHE_SIZE: 32G
-        run: cmake --build build --target cute-shaderc
+        run: |
+          export CCACHE_DIR="$HOME/.ccache"
+          cmake --build build --target cute-shaderc
 
       - name: Save ccache
         if: always()
