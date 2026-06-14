@@ -30,11 +30,6 @@ jobs:
           cmakeVersion: 4.2.3
           ninjaVersion: latest
 
-      - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: cute-shaderc-cosmo
-
       - name: Inject ccache wrapper into cosmocc
         run: |
           # Find cosmocc installation
@@ -81,8 +76,26 @@ jobs:
           cd cute_framework
           git apply ../cute_framework.patch
 
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ github.ref_name }}
+          restore-keys: |
+            ccache-${{ github.ref_name }}
+
       - name: Build
+        env:
+          CCACHE_DIR: ~/.cache/ccache
+          CCACHE_SIZE: 32G
         run: cmake --build build --target cute-shaderc
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ github.ref_name }}
 
       - name: Package cute-shaderc
         if: github.ref_type == 'tag'
