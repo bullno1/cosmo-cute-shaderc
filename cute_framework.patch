@@ -1,0 +1,25 @@
+From c675f62ea90d28e4896bdb220317dd58705ca089 Mon Sep 17 00:00:00 2001
+From: Bach Le <bach@bullno1.com>
+Date: Mon, 15 Jun 2026 02:18:17 +0700
+Subject: [PATCH] Avoid using std::unordered_set::contains
+
+---
+ tools/cute_shader.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/cute_shader.cpp b/tools/cute_shader.cpp
+index 65ebb792..a8e39281 100644
+--- a/tools/cute_shader.cpp
++++ b/tools/cute_shader.cpp
+@@ -101,7 +101,7 @@ public:
+ 		std::string include_name = header_name;
+ 
+ 		// Since all includes are system include, we can resolve include guard immediately
+-		if (automatic_include_guard && included_files.contains(include_name)) {
++		if (automatic_include_guard && included_files.find(include_name) != included_files.end()) {
+ 			return new IncludeResult(include_name, "", 0, nullptr);
+ 		}
+ 
+-- 
+2.54.0
+
