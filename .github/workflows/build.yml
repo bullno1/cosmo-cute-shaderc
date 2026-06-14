@@ -84,11 +84,15 @@ jobs:
       - name: Build
         run: cmake --build build --target cute-shaderc
 
-      - name: Rename
-        run: mv build/cute-shaderc build/cute-shaderc.exe
+      - name: Package cute-shaderc
+        if: github.ref_type == 'tag'
+        run: |
+          tar -czf cute-shaderc.tar.gz \
+              -C .build cute-shaderc \
+              --transform 's/cute-shaderc/cute-shaderc.exe/'
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
         with:
-          name: cute-shaderc
-          path: build/cute-shaderc.exe
+          files: cute-shaderc.tar.gz
