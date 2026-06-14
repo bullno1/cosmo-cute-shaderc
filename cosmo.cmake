@@ -1,0 +1,8 @@
+set(CMAKE_C_COMPILER_ID "Clang" CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_ID "Clang" CACHE INTERNAL "")
+set(CMAKE_C_COMPILER cosmocc)
+set(CMAKE_CXX_COMPILER cosmoc++)
+set(CMAKE_C_FLAGS_INIT "-mclang -mtiny")
+set(CMAKE_CXX_FLAGS_INIT "-mclang -mtiny")
+set(CMAKE_AR cosmoar)
+unset(CMAKE_RANLIB)

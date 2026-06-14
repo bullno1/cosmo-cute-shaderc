@@ -1,0 +1,94 @@
+---
+name: Build cute-shaderc with Cosmopolitan
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Update package repo
+        run: |
+          sudo apt-get update -qq
+
+      - name: Install dependencies
+        uses: daaku/gh-action-apt-install@v4
+        with:
+          packages: build-essential git make pkg-config
+
+      - name: Install cosmocc
+        uses: bjia56/setup-cosmocc@main
+        with:
+          version: "4.0.2"
+
+      - name: Setup CMake 4.2.x
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 4.2.3
+          ninjaVersion: latest
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: cute-shaderc-cosmo
+
+      - name: Inject ccache wrapper into cosmocc
+        run: |
+          # Find cosmocc installation
+          COSMOCC_PATH=$(which cosmocc)
+          COSMOCC_REAL=$(readlink -f "$COSMOCC_PATH")
+          COSMOCC_DIR=$(dirname "$COSMOCC_REAL")
+          LIBEXEC_DIR=$(dirname "$COSMOCC_DIR")/libexec
+          # Backup original clang
+          mv "$LIBEXEC_DIR/clang" "$LIBEXEC_DIR/clang.orig"
+          cp clang "$LIBEXEC_DIR/clang"
+          chmod +x "$LIBEXEC_DIR/clang"
+
+      - name: Configure CMake
+        run: |
+          cmake \
+            -B build \
+            -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=../cosmo.cmake \
+            -DCMAKE_SKIP_RPATH=ON \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DSDL_ALSA=OFF \
+            -DSDL_JACK=OFF \
+            -DSDL_KMSDRM=OFF \
+            -DSDL_OPENGL=OFF \
+            -DSDL_OPENGLES=OFF \
+            -DSDL_PIPEWIRE=OFF \
+            -DSDL_PULSEAUDIO=OFF \
+            -DSDL_RENDER=OFF \
+            -DSDL_SNDIO=OFF \
+            -DSDL_WAYLAND=OFF \
+            -DSDL_X11=OFF \
+            -DENABLE_PCH=OFF \
+            -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON \
+            -DOPENGL_INCLUDE_DIR=/usr/include \
+            -DCMAKE_CXX_SCAN_FOR_MODULES=OFF \
+            -DOPENGL_gl_LIBRARY=/usr/lib/x86_64-linux-gnu/libOpenGL.so \
+            -Dcrypto_LIBRARY=/usr/lib/x86_64-linux-gnu/libcrypto.so \
+            -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/x86_64-linux-gnu/libcrypto.so \
+            -DSDL_UNIX_CONSOLE_BUILD=ON \
+            cute_framework
+
+      - name: Apply patches
+        run: |
+          cd cute_framework
+          git apply ../cute_framework.patch
+
+      - name: Build
+        run: cmake --build build --target cute-shaderc
+
+      - name: Rename
+        run: mv build/cute-shaderc build/cute-shaderc.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cute-shaderc
+          path: build/cute-shaderc.exe
