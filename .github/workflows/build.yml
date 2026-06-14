@@ -24,6 +24,19 @@ jobs:
         with:
           version: "4.0.2"
 
+      - name: Install packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ccache ninja-build cmake
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ github.ref_name }}
+          restore-keys: |
+            ccache-${{ github.ref_name }}
+
       - name: Setup CMake 4.2.x
         uses: lukka/get-cmake@latest
         with:
@@ -75,14 +88,6 @@ jobs:
         run: |
           cd cute_framework
           git apply ../cute_framework.patch
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-${{ github.ref_name }}
-          restore-keys: |
-            ccache-${{ github.ref_name }}
 
       - name: Build
         env:
