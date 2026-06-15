@@ -10,48 +10,29 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Update package repo
-        run: |
-          sudo apt-get update -qq
-
       - name: Install dependencies
         uses: daaku/gh-action-apt-install@v4
         with:
           packages: build-essential git make pkg-config
-
-      - name: Install cosmocc
-        uses: bjia56/setup-cosmocc@main
-        with:
-          version: "4.0.2"
-
-      - name: Install packages
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: ccache ninja-build cmake
-
-      - name: Get branch name for cache key
-        run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            # Fall back to the default branch under a tag
-            BRANCH=${{ github.event.repository.default_branch }}
-          else
-            BRANCH=${{ github.ref_name }}
-          fi
-          echo "BRANCH_NAME=$BRANCH" >> $GITHUB_ENV
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-${{ env.BRANCH_NAME }}
-          restore-keys: |
-            ccache-${{ env.BRANCH_NAME }}
 
       - name: Setup CMake 4.2.x
         uses: lukka/get-cmake@latest
         with:
           cmakeVersion: 4.2.3
           ninjaVersion: latest
+
+
+      - name: Install cosmocc
+        uses: bjia56/setup-cosmocc@main
+        with:
+          version: "4.0.2"
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+          key: cosmo-cute-shaderc
+          max-size: 16GB
 
       - name: Inject ccache wrapper into cosmocc
         run: |
@@ -100,18 +81,7 @@ jobs:
           git apply ../cute_framework.patch
 
       - name: Build
-        env:
-          CCACHE_SIZE: 32G
-        run: |
-          export CCACHE_DIR="$HOME/.ccache"
-          cmake --build build --target cute-shaderc
-
-      - name: Save ccache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-${{ env.BRANCH_NAME }}
+        run: cmake --build build --target cute-shaderc
 
       - name: Package cute-shaderc
         if: github.ref_type == 'tag'
