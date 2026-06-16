@@ -1,0 +1,29 @@
+#!/bin/sh -eu
+
+# Get the upstream commit SHA of the submodule
+SHA=$(git rev-parse HEAD:cute_framework)
+SHORT_SHA=$(git rev-parse --short HEAD:cute_framework)
+echo "cute_framework SHA: $SHORT_SHA"
+
+# Get the most recent tag in the submodule matching a version pattern
+UPSTREAM_VERSION=$(git -C cute_framework describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+echo "cute_framework version: $UPSTREAM_VERSION"
+
+# Strip leading 'v' if present
+UPSTREAM_VERSION=${UPSTREAM_VERSION#v}
+
+# Find the highest existing build number for this version+hash combo
+BUILD=0
+for tag in $(git tag --list "v${UPSTREAM_VERSION}-${SHORT_SHA}+build.*" 2>/dev/null); do
+    N=${tag##*+build.}
+    if [ "$N" -gt "$BUILD" ] 2>/dev/null; then
+        BUILD=$N
+    fi
+done
+
+# Bump build number
+BUILD=$((BUILD + 1))
+TAG="v${UPSTREAM_VERSION}-${SHORT_SHA}+build.${BUILD}"
+
+echo "Tagging as: $TAG"
+git tag "$TAG"
