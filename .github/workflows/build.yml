@@ -77,11 +77,6 @@ jobs:
             -DSDL_UNIX_CONSOLE_BUILD=ON \
             cute_framework
 
-      - name: Apply patches
-        run: |
-          cd cute_framework
-          git apply ../cute_framework.patch
-
       - name: Build
         run: cmake --build build --target cute-shaderc
 
